@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">LocalPictureUtils</string>
+    <string name="picker_image_folder_info">共%d张</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="picker_image_exceed_max_image_select">最多选择%d张图片！</string>
+</resources>

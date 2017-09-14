@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="divider">#ff0000</color>
+    <color name="blue_btn_cannot_pressed">#6CDEDD</color>
+    <color name="blue_btn_normal">#2DD0CF</color>
+    <color name="blue_btn_pressed">#02BDBC</color>
+
+    <color name="blue_btn_text_70">#E0F8F8</color>
+    <color name="white">#ffffff</color>
+    <color name="blue_btn_text_press">#99E4E4</color>
+</resources>
