@@ -1,0 +1,2 @@
+# LocalPictureLibray
+Android移动设备本地图片库的操作
