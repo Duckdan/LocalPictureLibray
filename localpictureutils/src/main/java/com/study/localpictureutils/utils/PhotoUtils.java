@@ -7,9 +7,11 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import java.io.File;
@@ -59,8 +61,13 @@ public class PhotoUtils {
             //每次选择图片吧之前的图片删除
             clearCropFile(buildUri(activity));
 
+
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                //添加这一句表示对目标应用临时授权该Uri所代表的文件
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            }
             intent.putExtra(MediaStore.EXTRA_OUTPUT, buildUri(activity));
             if (!isIntentAvailable(activity, intent)) {
                 return;
@@ -104,11 +111,20 @@ public class PhotoUtils {
      */
     private Uri buildUri(Activity activity) {
 //        String name =DateFormat.format("yyyy-MM-dd HH:mm:ss", Calendar.getInstance().getTimeInMillis()) + ".png";
-        if (PermissionCheckUtils.checkExternalStorageIsExists()) {
-            return Uri.fromFile(Environment.getExternalStorageDirectory()).buildUpon().appendPath(CROP_FILE_NAME).build();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            if (PermissionCheckUtils.checkExternalStorageIsExists()) {
+                return Uri.fromFile(Environment.getExternalStorageDirectory()).buildUpon().appendPath(CROP_FILE_NAME).build();
+            } else {
+                return Uri.fromFile(activity.getCacheDir()).buildUpon().appendPath(CROP_FILE_NAME).build();
+            }
         } else {
-            return Uri.fromFile(activity.getCacheDir()).buildUpon().appendPath(CROP_FILE_NAME).build();
+            File file = new File(Environment.getExternalStorageDirectory() + "/zhiRui", CROP_FILE_NAME);
+            if (!file.getParentFile().exists()) {
+                file.getParentFile().mkdirs();
+            }
+            return FileProvider.getUriForFile(activity, "com.study.localpictureutils.fileprovider", file);
         }
+
     }
 
     /**
@@ -123,6 +139,9 @@ public class PhotoUtils {
 
     private boolean corp(Activity activity, Uri uri) {
         Intent cropIntent = new Intent("com.android.camera.action.CROP");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
         cropIntent.setDataAndType(uri, "image/*");
         cropIntent.putExtra("crop", "true");
         cropIntent.putExtra("aspectX", 1);
@@ -131,7 +150,12 @@ public class PhotoUtils {
         cropIntent.putExtra("outputY", 200);
         cropIntent.putExtra("return-data", true);
         cropIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
-        Uri cropuri = buildUri(activity);
+//        Uri cropuri = buildUri(activity);
+        File file = new File(Environment.getExternalStorageDirectory() + "/zhiRui", CROP_FILE_NAME);
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
+        }
+        Uri cropuri = Uri.fromFile(file);
         cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, cropuri);
         if (!isIntentAvailable(activity, cropIntent)) {
             return false;
@@ -158,11 +182,17 @@ public class PhotoUtils {
             Log.e(tag, "onPhotoResultListener is not null");
             return;
         }
-
+        File file = null;
         switch (requestCode) {
             //拍照
             case INTENT_TAKE:
-                if (new File(buildUri(activity).getPath()).exists()) {
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    file = new File(Environment.getExternalStorageDirectory(), buildUri(activity).getPath().substring("/zhiRui".length()));
+                } else {
+                    file = new File(buildUri(activity).getPath());
+                }
+                if (file.exists()) {
                     if (corp(activity, buildUri(activity))) {
                         return;
                     }
@@ -183,7 +213,12 @@ public class PhotoUtils {
 
             //截图
             case INTENT_CROP:
-                if (resultCode == Activity.RESULT_OK && new File(buildUri(activity).getPath()).exists()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    file = new File(Environment.getExternalStorageDirectory(), buildUri(activity).getPath().substring("/zhiRui".length()));
+                } else {
+                    file = new File(buildUri(activity).getPath());
+                }
+                if (resultCode == Activity.RESULT_OK && file.exists()) {
                     Bundle bundle = data.getExtras();
                     Bitmap bitmap = bundle.getParcelable("data");
                     onPhotoResultListener.onPhotoResult(buildUri(activity), bitmap);

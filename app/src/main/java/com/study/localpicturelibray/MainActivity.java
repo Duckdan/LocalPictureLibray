@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.study.localpictureutils.LocalPictureActivity;
 import com.study.localpictureutils.PictureDialog;
@@ -56,12 +57,26 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PictureDialog.CAMERA_PERMISSION_CODE) {
-            if (permissions.length == 2) {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    pictureDialog.getPhotoUtils().takePicture(this);
-                }
+            if (permissions.length <= 0) {
+                return;
             }
+
+            boolean flag = true;
+            for (int i = 0; i < grantResults.length; i++) {
+                flag = flag & (grantResults[i] == PackageManager.PERMISSION_GRANTED);
+            }
+            if (!flag) {
+                Toast.makeText(this, "授权失败", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (PictureDialog.clickIndex == 1) {
+                pictureDialog.getPhotoUtils().takePicture(this);
+            } else if (PictureDialog.clickIndex == 2) {
+                pictureDialog.jumpToPicture();
+            }
+
         }
+
     }
 
     @Override

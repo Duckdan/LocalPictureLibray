@@ -31,6 +31,7 @@ public class PictureDialog {
     private PhotoUtils photoUtils;
     private OnResultUriListener listener;
     private Dialog dialog;
+    public static int clickIndex = -1;
 
     /**
      * @param context    上下文实例
@@ -56,6 +57,13 @@ public class PictureDialog {
 
             }
         });
+        PermissionCheckUtils.setOnOnWantToOpenPermissionListener(new PermissionCheckUtils.OnWantToOpenPermissionListener() {
+            @Override
+            public void onWantToOpenPermission() {
+                Toast.makeText(PictureDialog.this.context, "请授予应用读取存储空间和使用相机的权限", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         initView();
     }
 
@@ -87,6 +95,7 @@ public class PictureDialog {
             public void onClick(View view) {
                 int size = PermissionCheckUtils.checkActivityPermissions(activity, new String[]{Manifest.permission.CAMERA,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE}, CAMERA_PERMISSION_CODE);
+                clickIndex = 1;
                 if (size == 0) {
                     photoUtils.takePicture(activity);
                 }
@@ -97,8 +106,12 @@ public class PictureDialog {
         dialog.findViewById(R.id.tv_3).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(activity, LocalPictureActivity.class);
-                activity.startActivityForResult(intent, LOCAL_MULTI_CODE);
+                int size = PermissionCheckUtils.checkActivityPermissions(activity, new String[]{Manifest.permission.CAMERA,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE}, CAMERA_PERMISSION_CODE);
+                clickIndex = 2;
+                if (size == 0) {
+                    jumpToPicture();
+                }
                 dialog.dismiss();
             }
         });
@@ -109,6 +122,11 @@ public class PictureDialog {
                 dialog.dismiss();
             }
         });
+    }
+
+    public void jumpToPicture() {
+        Intent intent = new Intent(activity, LocalPictureActivity.class);
+        activity.startActivityForResult(intent, LOCAL_MULTI_CODE);
     }
 
     public void show() {
